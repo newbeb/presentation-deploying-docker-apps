@@ -14,6 +14,23 @@
         font-weight: normal;
       }
       .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+	  
+      /* Two-column layout */
+      .left-column {
+        color: #777;
+        width: 30%;
+        height: 92%;
+        float: left;
+      }
+        .left-column h2:last-of-type, .left-column h3:last-child {
+          color: #000;
+        }
+      .right-column {
+        width: 60%;
+        float: right;
+        padding-top: 1em;
+      }
+	  
     </style>
   </head>
   <body>
@@ -29,17 +46,20 @@ BLN (aka Brian Lloyd-Newberry)
 @brianln
 
 ---
+name: who
 
 # Who?
 
 ## Brian Lloyd-Newberry
 
 * Enterprise Architect @ Dealer.com (A Dealertrack Technologies Solution)
-* 16+ years of getting paid for building software
+* 16+ years of getting paid for building software (Woot!)
+* Wide range of experience including SysAdmin, Programming, Management and now Full Time Architecture
 
 ???
 Enjoy being a Dad, 3D Printing, Cycling and geeking out with my Son.
-
+Love being in VT, grew up in "Midstate" and am happy to be able to raise a family here!
+Worked locally at VSAC for 5.5 years and at DDC for almost 5.
 
 ---
 name: why
@@ -63,40 +83,21 @@ Why?
  * Use Docker today in their work/play?
 
 ---
+name: roadmap
 
 # Roadmap:
 
-* What is Docker
- * Containers vs VMs
- * Docker quick hit
- * What makes up Docker
-
-* Examples
- * One container
- * Multiple Containers - Volumes
- * Multiple Containers - Linking
- * Multiple Containers example w/ Fig (and by hand)
-
-* Docker - Spanning Hosts
- * Kubernetes
- * Mesos/Marathon
- * CoreOS...
- * OpenStack, ...
-
-* Using Docker Today
- * Moving extremely quickly, lots of innovation and churn
- * https://devopsu.com/blog/docker-misconceptions/
- * Local and Dev environments
-  * Do lots of the same things that vagrant does w/ chef,puppet,salt
-  * You can't deploy vagrant images (sortof)
-
-Discuss - IaaS, PaaS, SaaS
+* What is Docker?
+* A Mental Model (Show Me!)
+* Escaping one host
+* Using Docker today
 
 ---
+name: whatisdocker
 
 # What is Docker?
 
-* Engine for deployment of applications
+## Engine for deployment of applications
  * Client & Server
  * [APIs](http://docs.docker.com/reference/api/docker_remote_api/ "Docker REST API")
  * [Command Line Interface](http://docs.docker.com/reference/commandline/cli/ "Docker CLI")
@@ -104,26 +105,35 @@ Discuss - IaaS, PaaS, SaaS
 
 --
 
-* "Virtualized" execution environment
+## "virtualized" execution environment
  * Image format &amp; Filesystem Abstraction
  * Linux Containers
 
 ???
 
-* You can also run your own registry easily (using Docker!)
+* Achieve many of the same goals as Virtualization
+ * without the overhead/cost
+ * with more risk?
 * Lots of tooling written in Go
 
 ---
 
 # Docker Container Pieces
 
-![Shipping Containers](http://photos.adron.me/Software/Software-Development/Docker-Virtual-Machines/i-jT3FfMR/0/S/photodune-1719153-container-l-S.jpg "Consistent API for Shipping Code")
 
 
-* Execution Driver(s) - libcontainer/LXC/...
+.left-column[
+* Execution Driver
+ * libcontainer
+ * LXC
+ * ...
 * Linux CGroups
 * Kernel Namespaces
 * Image
+]
+.right-column[
+![Shipping Containers](http://photos.adron.me/Software/Software-Development/Docker-Virtual-Machines/i-jT3FfMR/0/S/photodune-1719153-container-l-S.jpg "Consistent API for Shipping Code")
+]
 
 ???
 * Not Virtualization
@@ -159,16 +169,28 @@ Discuss - IaaS, PaaS, SaaS
 * Layer on Images
 * Writable container on top (copy on write)
 
+
 ---
 
-# Running a shell in Docker
+# A Mental Model (Show Me)
+
+* One container
+* Docker CLI - Crash Course
+* Multiple Containers - Volumes
+* Multiple Containers - Linking
+* Multiple Containers example w/ Fig
+
+---
+name: docker_hello_world
+
+# One Container - Running a shell in Docker
 
 ```sh
 # Run bash on ubuntu  (-i interactive -t tty)
-$ docker run -i -t ubuntu /bin/bash
+* $ docker run -i -t -rm ubuntu /bin/bash
 ```
 
-#### Wait for itnto build...
+#### Wait for it to build... (the first time)
 ```
 Unable to find image 'ubuntu' locally
 Pulling repository ubuntu
@@ -190,41 +212,105 @@ exit
 $ 
 ```
 
+???
+
+docker run -i -t --rm ubuntu /bin/bash
+echo hostname
+ps
+uname -a
+uptime
+exit
+
+* --rm means throw the container away when we exit.
+
 ---
+name: crash_using_images
 
-# Docker Images
+# Crash Course - Using Images
 
+Pre-built images that you can use to run
+
+Images are conceptually "tarballs" that contain the "layers" that will make up the container.
+
+## Commands:
 * docker images
 * docker pull [imagename]
 * docker search [imagename]
 
+???
+Search looks at the registry and finds stuff.
 
 ---
+name: crash_registries
+# Crash Course - Registries
 
-# Docker repository
+Registries manage images. They can be widely shared, or closely held.
 
-* public repo
-* private repo
+* Public registry
+ * [Docker Hub](https://registry.hub.docker.com/) 
+* private registry
+ * [Run your own in Docker](https://github.com/docker/docker-registry)
+ * [Quay](https://quay.io/)
 * docker login
 
+???
+docker run -p 5000:5000 registry
+
+No Demo of registries (for now)
 
 ---
+name: crash_building_images
 
-# Build docker image
+# Crash Course - Building Images
 
 * Manually
-** Run commands
-** docker commit
+ * Start an image w/ bash
+ * Run commands
+  * Maybe use salt, ansible, chef, puppet, ...
+ * docker commit
 
 * Dockerfile
-** The way to do it...
+ * The way (we are going) to do it...
+
+???
+
+Building images is similar to the concept in Vagrant.
 
 ---
+name: crash_dockerfiles
 
-# Dockerfile
+# Crash Course - [Dockerfile](https://docs.docker.com/reference/builder/)
 
+```sh
+FROM centos
+MAINTAINER Brian Lloyd-Newberry <newbeb@gmail.com>
+ENV REFRESHED_AT 2014-09-18
 
-TODO: Show a dockerfile
+WORKDIR /tmp
+
+# Add a Pre-download the jdk8 JVM so we can do an offline demo
+ADD jdk-8u11-linux-x64.tar.gz /opt/java
+
+ENTRYPOINT ["/opt/java/jdk1.8.0_11/bin/java"]
+CMD ["-version"]
+```
+
+???
+
+* FROM derive from a base image
+* MAINTAINER
+* ENV set an environment variable in the container
+ * Can pass ENVs in at runtime as well
+* ADD import files (and explode tar/zip/etc)
+* ENTRYPOINT what program to run
+* CMD what parameters to pass to entrypoint
+
+---
+name: crash_creating_bln_centos_jvm
+
+# Crash Course - Images from Dockerfiles
+
+docker build [-t tagname] pathspec
 
 ```sh
 $ docker build -t bln_centos_jvm .
@@ -255,6 +341,64 @@ Successfully built 475aafbc4fd
 
 ???
 
+---
+name: crash_running_bln_centos_jvm
+
+# Crash Course - Running our new Image
+
+docker run [imagespec] [args]
+
+```sh
+* $ docker run bln_centos_jvm
+java version "1.8.0_11"
+Java(TM) SE Runtime Environment (build 1.8.0_11-b12)
+Java HotSpot(TM) 64-Bit Server VM (build 25.11-b03, mixed mode)
+```
+
+--
+
+**How do we run a class or a jarfile?**
+
+???
+
+docker run bln_centos_jvm -help
+
+Doesn't really do anything, but it is a great **BASE IMAGE** for JVMs
+
+---
+name: springboot
+class: middle, center
+
+# Requisite Spring Boot Application... 
+## (plus Docker)
+
+java -jar something.jar
+
+---
+
+# Dockerfile for executable jar
+
+```sh
+FROM bln_centos_jvm
+MAINTAINER Brian Lloyd-Newberry <newbeb@gmail.com>
+
+ADD build/libs/docker-pixel-0.0.1-SNAPSHOT.jar /opt/jars/
+
+CMD ["-jar", "/opt/jars/docker-pixel-0.0.1-SNAPSHOT.jar"]
+```
+
+--
+### Build and run the image
+```sh
+docker build -t bln_java_pixel .
+docker run -p 8888:8080 bln_java_pixel
+```
+--
+### Build and run the image in the background
+```sh
+docker run -p 8888:8080 -d bln_java_pixel
+docker logs -ft bln_java_pixel
+```
 
 ---
 
@@ -318,6 +462,27 @@ http://192.168.59.103:8080/
 ---
 
 
+---
+
+* Escaping one host
+ * Kubernetes
+ * Mesos/Marathon
+ * CoreOS...
+ * OpenStack, ...
+
+---
+
+* Using Docker Today
+ * Moving extremely quickly, lots of innovation and churn
+ * https://devopsu.com/blog/docker-misconceptions/
+ * Local and Dev environments
+  * Do lots of the same things that vagrant does w/ chef,puppet,salt
+  * You can't deploy vagrant images (sortof)
+
+---
+
+
+
 # More to know
 # Docker environment
 
@@ -329,6 +494,9 @@ http://192.168.59.103:8080/
 * [Docker](https://www.docker.com/) - The Docker Team and committers
 * [The Docker Book](http://www.dockerbook.com/) - Great Overview from [James Turnbull](http://www.jamesturnbull.net/)
 * [Remark.js](http://remarkjs.com/) ([git](https://github.com/gnab/remark)) - for the presentation markdown engine
+* Vagrant
+* Boot2Docker
+
 
 
 
