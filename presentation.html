@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style type="text/css">
+      @import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Deploying Applications w/ Docker
+## A _(very brief)_ Introduction
+
+BLN (aka Brian Lloyd-Newberry) 
+
+@brianln
+
+---
+
+# Who?
+
+## Brian Lloyd-Newberry
+
+* Enterprise Architect @ Dealer.com (A Dealertrack Technologies Solution)
+* 16+ years of getting paid for building software
+
+???
+Enjoy being a Dad, 3D Printing, Cycling and geeking out with my Son.
+
+
+---
+name: why
+class: middle, center
+
+# Why are we here?
+
+![Docker Whale](https://d3oypxn00j2a10.cloudfront.net/0.9.0/img/homepage/docker-whale-home-logo.png "The new application deployment hotness.")
+
+???
+
+Why?
+* Docker is the "new hotness" in application management.
+* Learn about what Docker is, and some ways that apps can be deployed in it today (and tomorrow). 
+ * Not a deep dive into all of Docker, just give you a taste.
+* Talk about where Docker is going
+ * What will be the role is in the IaaS & PaaS workspace
+* How many people have
+ * Heard about Docker?
+ * Played with Docker?
+ * Use Docker today in their work/play?
+
+---
+
+# Roadmap:
+
+* What is Docker
+ * Containers vs VMs
+ * Docker quick hit
+ * What makes up Docker
+
+* Examples
+ * One container
+ * Multiple Containers - Volumes
+ * Multiple Containers - Linking
+ * Multiple Containers example w/ Fig (and by hand)
+
+* Docker - Spanning Hosts
+ * Kubernetes
+ * Mesos/Marathon
+ * CoreOS...
+ * OpenStack, ...
+
+* Using Docker Today
+ * Moving extremely quickly, lots of innovation and churn
+ * https://devopsu.com/blog/docker-misconceptions/
+ * Local and Dev environments
+  * Do lots of the same things that vagrant does w/ chef,puppet,salt
+  * You can't deploy vagrant images (sortof)
+
+Discuss - IaaS, PaaS, SaaS
+
+---
+
+# What is Docker?
+
+* Engine for deployment of applications
+ * Client & Server
+ * [APIs](http://docs.docker.com/reference/api/docker_remote_api/ "Docker REST API")
+ * [Command Line Interface](http://docs.docker.com/reference/commandline/cli/ "Docker CLI")
+ * [Registry](https://registry.hub.docker.com/ "Common Registry for Docker Images") for management and sharing of "images"
+
+--
+
+* "Virtualized" execution environment
+ * Image format &amp; Filesystem Abstraction
+ * Linux Containers
+
+???
+
+* You can also run your own registry easily (using Docker!)
+* Lots of tooling written in Go
+
+---
+
+# Docker Container Pieces
+
+![Shipping Containers](http://photos.adron.me/Software/Software-Development/Docker-Virtual-Machines/i-jT3FfMR/0/S/photodune-1719153-container-l-S.jpg "Consistent API for Shipping Code")
+
+
+* Execution Driver(s) - libcontainer/LXC/...
+* Linux CGroups
+* Kernel Namespaces
+* Image
+
+???
+* Not Virtualization
+ * VMWare is very interested/involved in the community
+ * Many times containers are run in VMs to achieve higher isolation (w/ some cost)
+* CGroups
+ * Kernel Level
+ * Groups processes
+ * Controls resource allocations: CPU, Memory, Network, Disk
+ * Can be layered/nested
+* Kernel Namespaces
+ * Control what you can do
+ * Restrict the "view" of the system
+ * Docker has defaults
+ * Can be layered/nested
+* Docker Image
+ * A package of "tarballs"
+ * Can be hierarchical
+ * Ends up being built as a layered - copy on write filesystem
+
+* Linux containers and CGroups have [been in the linux kernel since 2007] (http://www.quora.com/What-is-the-history-of-control-groups-and-Linux-Containers-in-the-Linux-kernel).
+* FreeBSD Jails have been [since 4.x](https://www.freebsd.org/doc/handbook/jails.html#jails-synopsis) ([2000-2005](http://en.wikipedia.org/wiki/History_of_FreeBSD#FreeBSD_4)) 
+
+---
+
+# Docker Filesystem
+
+![Multiple Containers running in Docker](http://docs.docker.com/terms/images/docker-filesystems-busyboxrw.png)
+
+???
+
+* BootFS
+* Layer on Images
+* Writable container on top (copy on write)
+
+---
+
+# Running a shell in Docker
+
+```sh
+# Run bash on ubuntu  (-i interactive -t tty)
+$ docker run -i -t ubuntu /bin/bash
+```
+
+#### Wait for itnto build...
+```
+Unable to find image 'ubuntu' locally
+Pulling repository ubuntu
+96864a7d2df3: Download complete 
+511136ea3c5a: Download complete 
+bfb8b5a2ad34: Download complete 
+c1f3bdbd8355: Download complete 
+897578f527ae: Download complete 
+9387bcc9826e: Download complete 
+809ed259f845: Download complete
+```
+
+#### There we go!
+```sh
+root@c6f2dad31651:/# echo Hello World from $(hostname)
+Hello World from c6f2dad31651
+root@c6f2dad31651:/# exit
+exit
+$ 
+```
+
+---
+
+# Docker Images
+
+* docker images
+* docker pull [imagename]
+* docker search [imagename]
+
+
+---
+
+# Docker repository
+
+* public repo
+* private repo
+* docker login
+
+
+---
+
+# Build docker image
+
+* Manually
+** Run commands
+** docker commit
+
+* Dockerfile
+** The way to do it...
+
+---
+
+# Dockerfile
+
+
+TODO: Show a dockerfile
+
+```sh
+$ docker build -t bln_centos_jvm .
+Sending build context to Docker daemon   159 MB
+Sending build context to Docker daemon 
+Step 0 : FROM centos
+ ---> 70214e5d0a90
+Step 1 : MAINTAINER Brian Lloyd-Newberry <newbeb@gmail.com>
+ ---> Using cache
+ ---> 28581710334a
+Step 2 : WORKDIR /tmp
+ ---> Using cache
+ ---> 0eb1d0ffc672
+Step 3 : RUN yum install -y tar
+ ---> Using cache
+ ---> dfe513cc9dd0
+Step 4 : ADD jdk-8u11-linux-x64.tar.gz /opt/java
+ ---> Using cache
+ ---> 6ef0e7bfb1a8
+Step 5 : ENTRYPOINT ["/opt/java/jdk1.8.0_11/bin/java"]
+ ---> Using cache
+ ---> 958c2dbda7aa
+Step 6 : CMD ["-version"]
+ ---> Using cache
+ ---> 475aafbc4fda
+Successfully built 475aafbc4fd
+```
+
+???
+
+
+---
+
+# To include
+
+* Naming containers: docker run --name somenameofcontainer .....
+* Attach to container  docker attach [name|id]
+* Detached containers: -d
+** Has to have something to keep running
+* Docker logs: docker logs [-f] [-t] [name|id]
+** follow, timestamp
+* Looking inside container: docker top [name|id]
+* docker start|stop|rm [name|id]
+* docker inspect [name|id]
+* docker run [--rm]
+** --rm creates a container but doesn't save it
+x
+
+---
+
+# Building an application and running it in Docker
+
+Build and tag our pixel server
+
+gradle build
+
+Look at docker file
+
+docker build -t bln_java_pixel .
+
+Run it
+
+docker run -p 8080:8080 -d bln_java_pixel
+
+docker ps
+
+http://192.168.59.103:8080/
+
+???
+
+1. Build our app
+gradle build
+
+2. Define a Docker file and build it
+docker build -t bln_java_pixel .
+
+3. Run our Docker image
+docker run -p 8080:8080 -d bln_java_pixel
+
+4. See what Docker is running
+docker ps
+
+5. Hit our service
+http://192.168.59.103:8080/
+
+
+* The docker file is linked. It depends on bln_centos_jvm. 
+* Note that all we provide is the ADD and the CMD.
+* We could use volumes for the jar as well
+
+---
+
+
+# More to know
+# Docker environment
+
+
+---
+
+# Credits
+
+* [Docker](https://www.docker.com/) - The Docker Team and committers
+* [The Docker Book](http://www.dockerbook.com/) - Great Overview from [James Turnbull](http://www.jamesturnbull.net/)
+* [Remark.js](http://remarkjs.com/) ([git](https://github.com/gnab/remark)) - for the presentation markdown engine
+
+
+
+    </textarea>
+    <script src="http://gnab.github.io/remark/downloads/remark-latest.min.js" type="text/javascript">
+    </script>
+    <script type="text/javascript">
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
