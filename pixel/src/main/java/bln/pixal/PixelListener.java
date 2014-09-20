@@ -30,13 +30,13 @@ public class PixelListener {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    @RequestMapping("/")
+    @RequestMapping("/*")
     @ResponseBody
     String ping(HttpServletRequest request, HttpServletResponse response)
     {
         publishPixelEvent(request);
 
-        log.info("Handled request for: {} by {}", request.getServerName(), request.getHeader("referer"));
+        log.info("Handled request for: {} by {}", request.getRequestURL(), request.getHeader("referer"));
 
         return String.format("Hello %s at %d", request.getRemoteAddr(), System.currentTimeMillis());
     }
@@ -48,8 +48,7 @@ public class PixelListener {
 
     private void publishPixelEvent(HttpServletRequest request) {
         final String[] payload = new String[] {
-                request.getServerName(),
-                request.getContextPath(),
+                request.getRequestURL().toString(),
                 request.getHeader("referer")
         };
 
