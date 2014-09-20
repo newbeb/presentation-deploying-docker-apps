@@ -441,7 +441,7 @@ Go to https://registry.hub.docker.com/ and [search for redis](https://registry.h
 ---
 name: pixeldockerredis_buildredis
 
-# Running a redis container
+# Running a Redis container
 ```sh
 > docker run --name pixel-redis -d redis
 18aca2c9904d856b2745973d2f47cc3cf14d1a0c87d0083e1d19bca0ac9dcfb6
@@ -452,6 +452,14 @@ CONTAINER ID        IMAGE               COMMAND             CREATED             
 > docker run -it --link pixel-redis:redis --rm redis sh -c 'exec redis-cli -h "$REDIS_PORT_6379_TCP_ADDR" -p "$REDIS_PORT_6379_TCP_PORT"'
 172.17.0.50:6379>
 ```
+
+???
+
+docker run --name pixel-redis -d redis
+
+docker run -it --link pixel-redis:redis --rm redis sh -c 'exec redis-cli -h "$REDIS_PORT_6379_TCP_ADDR" -p "$REDIS_PORT_6379_TCP_PORT"'
+
+NOTE: This is not persistent. Need to use a [volume](https://docs.docker.com/userguide/dockervolumes/).
 
 ---
 name: pixeldockerredis_buildpixel
@@ -467,104 +475,100 @@ docker logs -ft bln_java_pixel_redis
 [Linking containers](https://docs.docker.com/userguide/dockerlinks/) is an important concept.
 
 
-???
+---
+name: pixel_redis_wrapup
 
-```sh
-# Starting a redis server locally (on Mac)
-redis-server /usr/local/etc/redis.conf
+# Watching pixel redis in action
+* docker run -it --link pixel-redis:redis --rm redis sh -c 'exec redis-cli -h "$REDIS_PORT_6379_TCP_ADDR" -p "$REDIS_PORT_6379_TCP_PORT"'
+* SUBSCRIBE pixel
 
-# Using the redis-cli to see what is happening w/ Redis
-redis-cli
-SUBSCRIBE pixel
+
+name: fig
+
+# Linking is complicated...
+
+## http://www.fig.sh/
+
+```yaml
+web:
+  build: .
+  command: python app.py
+  links:
+   - db
+  ports:
+   - "8000:8000"
+db:
+  image: postgres
 ```
 
-
-
-
-# To include
-
-* Naming containers: docker run --name somenameofcontainer .....
-* Attach to container  docker attach [name|id]
-* Detached containers: -d
-** Has to have something to keep running
-* Docker logs: docker logs [-f] [-t] [name|id]
-** follow, timestamp
-* Looking inside container: docker top [name|id]
-* docker start|stop|rm [name|id]
-* docker inspect [name|id]
-* docker run [--rm]
-** --rm creates a container but doesn't save it
-x
-
 ---
-
-# Building an application and running it in Docker
-
-Build and tag our pixel server
-
-gradle build
-
-Look at docker file
-
-docker build -t bln_java_pixel .
-
-Run it
-
-docker run -p 8080:8080 -d bln_java_pixel
-
-docker ps
-
-http://192.168.59.103:8080/
-
-???
-
-1. Build our app
-gradle build
-
-2. Define a Docker file and build it
-docker build -t bln_java_pixel .
-
-3. Run our Docker image
-docker run -p 8080:8080 -d bln_java_pixel
-
-4. See what Docker is running
-docker ps
-
-5. Hit our service
-http://192.168.59.103:8080/
-
-
-* The docker file is linked. It depends on bln_centos_jvm. 
-* Note that all we provide is the ADD and the CMD.
-* We could use volumes for the jar as well
-
----
-
-
----
-
+name: escaping_one_host
+class: center, middle
 * Escaping one host
  * Kubernetes
  * Mesos/Marathon
- * CoreOS...
- * OpenStack, ...
+ * CoreOS
+ * IaaS and PaaS providers and solutions
+ * Panamax
 
 ---
+name: kubernetes
+class: center, middle
 
-* Using Docker Today
- * Moving extremely quickly, lots of innovation and churn
- * https://devopsu.com/blog/docker-misconceptions/
- * Local and Dev environments
-  * Do lots of the same things that vagrant does w/ chef,puppet,salt
-  * You can't deploy vagrant images (sortof)
+# Kubernetes
+
+## https://github.com/GoogleCloudPlatform/kubernetes
 
 ---
+name: mesos_marathon
+class: center, middle
 
+# Mesos &amp; Marathon
 
+## https://github.com/mesosphere/marathon
 
-# More to know
-# Docker environment
+Also: https://mesosphere.io/learn/
 
+---
+name: coreos
+class: center, middle
+
+# CoreOS
+
+## https://coreos.com/
+ 
+---
+name: iaas_paas
+
+# IaaS and PaaS providers
+
+* OpenStack
+* CloudFoundry
+* Microsoft Azure
+* Google Cloud Engine
+* AWS Elastic Beanstalk
+
+???
+* OpenStack has a [hypervisor driver](https://wiki.openstack.org/wiki/Docker) for Docker in Nova Compute
+* Cloud Foundry has [Decker](http://www.cloudcredo.com/decker-docker-cloud-foundry/)
+* [Azure running Kubernetes](http://azure.microsoft.com/blog/2014/08/28/hackathon-with-kubernetes-on-azure/)
+* [GCE and Mesosphere](https://mesosphere.io/), plus Kubernetes is Google... 
+
+---
+name: dockertoday
+class: center, middle
+
+# Using Docker Today
+* Moving extremely quickly
+* Lots of innovation and churn
+* https://devopsu.com/blog/docker-misconceptions/
+* Local and Dev environments
+ * Do lots of the same things that vagrant does w/ chef,puppet,salt
+ * You can't deploy vagrant images (sortof)
+
+???
+
+Know what you are getting into
 
 ---
 
@@ -580,6 +584,11 @@ http://192.168.59.103:8080/
 * [SpringBoot](http://projects.spring.io/spring-boot/) and [Spring Data Redis](https://spring.io/guides/gs/messaging-redis/)
 * [Remark.js](http://remarkjs.com/) ([git](https://github.com/gnab/remark)) - for the presentation markdown engine
 
+---
+name: qanda
+class: middle, center
+
+# Questions?
 
 
 
