@@ -23,16 +23,16 @@ public class PixelListener {
 
     private Logger log = LoggerFactory.getLogger("PixalLog");
 
-    @RequestMapping("/")
+    @RequestMapping("/*")
     @ResponseBody
     String ping(HttpServletRequest request, HttpServletResponse response)
     {
 
         final String referer = request.getHeader("referer");
 
-        log.info("Handled request for: {} by {}", request.getServerName(), referer);
+        log.info("Handled request for: {} by {}", request.getRequestURL(), request.getRemoteAddr() + " via " + referer);
 
-        return "Hello " + referer;
+        return "Hello " + request.getRemoteAddr() + " at " + System.currentTimeMillis();
     }
 
     public static void main(String[] args) throws Exception {
