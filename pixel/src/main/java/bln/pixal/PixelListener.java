@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
@@ -20,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author Brian Lloyd-Newberry @brianln
  */
 @Controller
+@Import(PixelConfiguration.class)
 @EnableAutoConfiguration
 public class PixelListener {
 
