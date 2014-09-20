@@ -187,7 +187,7 @@ name: docker_hello_world
 
 ```sh
 # Run bash on ubuntu  (-i interactive -t tty)
-* $ docker run -i -t -rm ubuntu /bin/bash
+* $ docker run -i -t --rm ubuntu /bin/bash
 ```
 
 #### Wait for it to build... (the first time)
@@ -238,7 +238,9 @@ Images are conceptually "tarballs" that contain the "layers" that will make up t
 * docker search [imagename]
 
 ???
-Search looks at the registry and finds stuff.
+* Docker images shows you images you have on your Docker host to work with.
+* Docker pull allows you to pull specific images to your docker host (work offline or avoid bottleneck down the road)
+* Search looks at the registry and finds stuff.
 
 ---
 name: crash_registries
@@ -254,9 +256,9 @@ Registries manage images. They can be widely shared, or closely held.
 * docker login
 
 ???
-docker run -p 5000:5000 registry
 
-No Demo of registries (for now)
+* docker run -p 5000:5000 registry
+* No Demo of registries (for now)
 
 ---
 name: crash_building_images
@@ -341,6 +343,8 @@ Successfully built 475aafbc4fd
 
 ???
 
+* docker build -t bln_centos_jvm .
+dop
 ---
 name: crash_running_bln_centos_jvm
 
@@ -357,7 +361,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.11-b03, mixed mode)
 
 --
 
-**How do we run a class or a jarfile?**
+** How is this useful?**
 
 ???
 
@@ -374,7 +378,21 @@ class: middle, center
 
 java -jar something.jar
 
+
+???
+
+```sh
+# Build and run the pixel on my local machine
+cd pixel
+gradle build
+java -jar build/libs/docker-pixel-0.0.1-SNAPSHOT.jar
+```
+
+What are the problems with doing this?
+* Environment setup!
+
 ---
+name: pixeldockerrun
 
 # Dockerfile for executable jar
 
@@ -400,7 +418,68 @@ docker run -p 8888:8080 -d bln_java_pixel
 docker logs -ft bln_java_pixel
 ```
 
+???
+
+Test url: 
+* echo "http://$(boot2docker ip 2>/dev/null):8888/"
+* ./streampixels.py "http://$(boot2docker ip 2>/dev/null):8888/"
+
+Inspect images
+* docker inspect imagespec
+
 ---
+name: pixeldockerredis_start
+class: middle,center
+
+# Example w/ a dependency
+
+### Spring Boot pixel server
+### Publishing messages to Redis
+
+Go to https://registry.hub.docker.com/ and [search for redis](https://registry.hub.docker.com/_/redis/)
+
+---
+name: pixeldockerredis_buildredis
+
+# Running a redis container
+```sh
+> docker run --name pixel-redis -d redis
+18aca2c9904d856b2745973d2f47cc3cf14d1a0c87d0083e1d19bca0ac9dcfb6
+> docker ps
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+18aca2c9904d        redis:latest        "redis-server"      25 hours ago        Up About a minute   6379/tcp            pixel-redis
+
+> docker run -it --link pixel-redis:redis --rm redis sh -c 'exec redis-cli -h "$REDIS_PORT_6379_TCP_ADDR" -p "$REDIS_PORT_6379_TCP_PORT"'
+172.17.0.50:6379>
+```
+
+---
+name: pixeldockerredis_buildpixel
+
+# Rebuilding the pixel image for redis
+
+```sh
+docker build -t bln_java_pixel_redis .
+docker run --link pixel-redis:redis -p 8889:8080 -d bln_java_pixel_redis
+docker logs -ft bln_java_pixel_redis
+```
+
+[Linking containers](https://docs.docker.com/userguide/dockerlinks/) is an important concept.
+
+
+???
+
+```sh
+# Starting a redis server locally (on Mac)
+redis-server /usr/local/etc/redis.conf
+
+# Using the redis-cli to see what is happening w/ Redis
+redis-cli
+SUBSCRIBE pixel
+```
+
+
+
 
 # To include
 
@@ -493,9 +572,13 @@ http://192.168.59.103:8080/
 
 * [Docker](https://www.docker.com/) - The Docker Team and committers
 * [The Docker Book](http://www.dockerbook.com/) - Great Overview from [James Turnbull](http://www.jamesturnbull.net/)
+* [Vagrant](https://www.vagrantup.com/)
+* [Boot2Docker](https://github.com/boot2docker/boot2docker)
+* [Fig](http://www.fig.sh/)
+* [Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)
+* [Mesos](http://mesos.apache.org/) &amp; [Marathon](http://mesosphere.io/learn/launch-docker-container-on-mesosphere/)
+* [SpringBoot](http://projects.spring.io/spring-boot/) and [Spring Data Redis](https://spring.io/guides/gs/messaging-redis/)
 * [Remark.js](http://remarkjs.com/) ([git](https://github.com/gnab/remark)) - for the presentation markdown engine
-* Vagrant
-* Boot2Docker
 
 
 
