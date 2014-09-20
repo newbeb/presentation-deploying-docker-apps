@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * Configuration for the Pixel Server
  *
