@@ -45,6 +45,8 @@ BLN (aka Brian Lloyd-Newberry)
 
 @brianln
 
+** Hit P for the presentation notes **
+
 ---
 name: who
 
@@ -276,7 +278,11 @@ name: crash_building_images
 
 ???
 
-Building images is similar to the concept in Vagrant.
+* Building images is similar to the concept in Vagrant.
+* You can use configuration management, but that leads down the way to multi-purpose pain if you are not careful
+ * Don't think of containers as VMs...
+* You should try for single purpose containers
+* Dockerfiles make building "re-usable", in the same way that configuration management systems do.
 
 ---
 name: crash_dockerfiles
@@ -343,8 +349,16 @@ Successfully built 475aafbc4fd
 
 ???
 
+## Running the example
+* cd centos-jvm
+* ./pulljava.sh
 * docker build -t bln_centos_jvm .
-dop
+
+## What it does
+* It will read the Dockerfile from the local directory (. is the pathspec here)
+* Pushes local context (i.e. directory context) to the Docker server
+* "Packages" up each step to construct an image w/ the tag of bln_centos_jvm (so we can find it)
+
 ---
 name: crash_running_bln_centos_jvm
 
@@ -359,37 +373,48 @@ Java(TM) SE Runtime Environment (build 1.8.0_11-b12)
 Java HotSpot(TM) 64-Bit Server VM (build 25.11-b03, mixed mode)
 ```
 
---
-
 ** How is this useful?**
 
 ???
 
-docker run bln_centos_jvm -help
-
-Doesn't really do anything, but it is a great **BASE IMAGE** for JVMs
+* docker run bln_centos_jvm -help
+* Doesn't really do anything, but it is a great **BASE IMAGE** for JVMs
+* Docker containers can inherit from other containers
+* Let's do that.
 
 ---
 name: springboot
 class: middle, center
 
-# Requisite Spring Boot Application... 
+# Requisite [Spring Boot](http://projects.spring.io/spring-boot/) Application... 
 ## (plus Docker)
 
 java -jar something.jar
 
+Build and run an endpoint that records url hits (i.e. a pixel server)
 
-???
+---
+name: simplepixel_demo
+
+# Run a simple pixel server that just logs
+Checkout the __redispixel__ branch
 
 ```sh
 # Build and run the pixel on my local machine
 cd pixel
+git checkout simplepixel
 gradle build
+# Run it locally
 java -jar build/libs/docker-pixel-0.0.1-SNAPSHOT.jar
 ```
-
-What are the problems with doing this?
+-- 
+### What are the problems with doing this?
 * Environment setup!
+
+???
+
+Buidling a simple pixel server that just logs what you hit it with.
+
 
 ---
 name: pixeldockerrun
@@ -404,6 +429,11 @@ ADD build/libs/docker-pixel-0.0.1-SNAPSHOT.jar /opt/jars/
 
 CMD ["-jar", "/opt/jars/docker-pixel-0.0.1-SNAPSHOT.jar"]
 ```
+
+???
+
+* Throw in our newly minted jarfile
+* Override the CMD to say run the jar
 
 --
 ### Build and run the image
@@ -420,9 +450,15 @@ docker logs -ft bln_java_pixel
 
 ???
 
-Test url: 
-* echo "http://$(boot2docker ip 2>/dev/null):8888/"
-* ./streampixels.py "http://$(boot2docker ip 2>/dev/null):8888/"
+* 8888 will be the port that our application will be exposed externally on
+ * Mapped internally to 8080
+
+Test url:
+
+* Get the IP address of our Docker host, and construct a URL to our service 
+ * echo "http://$(boot2docker ip 2>/dev/null):8888/"
+* Run some fake pixel traffic against our server
+ * ./streampixels.py "http://$(boot2docker ip 2>/dev/null):8888/"
 
 Inspect images
 * docker inspect imagespec
@@ -455,8 +491,10 @@ CONTAINER ID        IMAGE               COMMAND             CREATED             
 
 ???
 
+### Run the redis server
 docker run --name pixel-redis -d redis
 
+### Run the redis CLI connecting to the redis server (as a disposable VM)
 docker run -it --link pixel-redis:redis --rm redis sh -c 'exec redis-cli -h "$REDIS_PORT_6379_TCP_ADDR" -p "$REDIS_PORT_6379_TCP_PORT"'
 
 NOTE: This is not persistent. Need to use a [volume](https://docs.docker.com/userguide/dockervolumes/).
@@ -464,24 +502,50 @@ NOTE: This is not persistent. Need to use a [volume](https://docs.docker.com/use
 ---
 name: pixeldockerredis_buildpixel
 
-# Rebuilding the pixel image for redis
+# Rebuilding the pixel application image for redis
+Checkout the __redispixel__ branch
 
 ```sh
+# Build the image
 docker build -t bln_java_pixel_redis .
+# Run the application hitting the new pixel server
 docker run --link pixel-redis:redis -p 8889:8080 -d bln_java_pixel_redis
 docker logs -ft bln_java_pixel_redis
 ```
 
 [Linking containers](https://docs.docker.com/userguide/dockerlinks/) is an important concept.
 
-
+???
+```sh
+# Build and run the pixel on my local machine
+cd pixel
+git checkout redispixel
+gradle build
+# Run it
+docker build -t bln_java_pixel_redis .
+docker run --link pixel-redis:redis -p 8889:8080 -d bln_java_pixel_redis
+docker logs -ft bln_java_pixel_redis
+```
 ---
 name: pixel_redis_wrapup
 
 # Watching pixel redis in action
-* docker run -it --link pixel-redis:redis --rm redis sh -c 'exec redis-cli -h "$REDIS_PORT_6379_TCP_ADDR" -p "$REDIS_PORT_6379_TCP_PORT"'
-* SUBSCRIBE pixel
 
+```sh
+docker run -it --link pixel-redis:redis --rm redis \
+	sh -c 'exec redis-cli -h "$REDIS_PORT_6379_TCP_ADDR" \
+	-p "$REDIS_PORT_6379_TCP_PORT"'
+SUBSCRIBE pixel
+```
+
+???
+
+* Show Java code
+* Spin up temp redis image
+ * docker run -it --link pixel-redis:redis --rm redis sh -c 'exec redis-cli -h "$REDIS_PORT_6379_TCP_ADDR" -p "$REDIS_PORT_6379_TCP_PORT"'
+ * SUBSCRIBE pixel
+ 
+---
 
 name: fig
 
@@ -501,15 +565,27 @@ db:
   image: postgres
 ```
 
+???
+
+* Fig is one of several tools that provides a meta-manifest 
+* YAML based
+* Again, there are lots of projects out there.
+
 ---
 name: escaping_one_host
 class: center, middle
-* Escaping one host
- * Kubernetes
- * Mesos/Marathon
- * CoreOS
- * IaaS and PaaS providers and solutions
- * Panamax
+
+# Escaping one host
+
+Kubernetes
+
+Mesos/Marathon
+
+CoreOS
+
+IaaS and PaaS providers and solutions
+
+Panamax
 
 ---
 name: kubernetes
@@ -518,6 +594,13 @@ class: center, middle
 # Kubernetes
 
 ## https://github.com/GoogleCloudPlatform/kubernetes
+
+???
+
+* Master &amp; Minions 
+* Pods &amp; Services
+* On top of etcd
+* http://www.slideshare.net/rajdeep/introduction-to-kubernetes
 
 ---
 name: mesos_marathon
@@ -529,6 +612,14 @@ class: center, middle
 
 Also: https://mesosphere.io/learn/
 
+???
+
+* Mesos is cluster manager - twitter, etc
+* Marathon is "cluster wide init and control system"
+* Marathon provides a load balancer config for HAProxy across the containers it deploys
+* Strong API for management
+* https://github.com/mesosphere/playa-mesos
+
 ---
 name: coreos
 class: center, middle
@@ -536,17 +627,28 @@ class: center, middle
 # CoreOS
 
 ## https://coreos.com/
+
+???
+
+* Everything is a container
+* A cluster from the start using fleet (distributed init system)
+* Commercial support available
+* Built out of ChromeOS
  
 ---
 name: iaas_paas
-
+class: middle, center
 # IaaS and PaaS providers
 
-* OpenStack
-* CloudFoundry
-* Microsoft Azure
-* Google Cloud Engine
-* AWS Elastic Beanstalk
+OpenStack
+
+CloudFoundry
+
+Microsoft Azure
+
+Google Cloud Engine
+
+AWS Elastic Beanstalk
 
 ???
 * OpenStack has a [hypervisor driver](https://wiki.openstack.org/wiki/Docker) for Docker in Nova Compute
@@ -556,7 +658,6 @@ name: iaas_paas
 
 ---
 name: dockertoday
-class: center, middle
 
 # Using Docker Today
 * Moving extremely quickly
@@ -568,7 +669,9 @@ class: center, middle
 
 ???
 
-Know what you are getting into
+* Know what you are getting into
+* Safe for local envs and exploration in dev and other low risk environments
+* Again, know what you are getting into and how fast things are changing...
 
 ---
 
