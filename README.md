@@ -5,7 +5,7 @@ This is a presentation on using Docker to deploy applications.
 It provides and introductory example with a Java application deployed to Docker as an executable jar file (as a Spring Boot app).
 The example is extended to publish messages to a Redis server running in docker, which is linked to the application.
 
-Start with the [presenation.html/(presentation.html) file which is implemented in [Remark](https://github.com/gnab/remark).
+Start with the [presenation.html](presentation.html) file which is implemented in [Remark](https://github.com/gnab/remark).
 Hitting P will bring up the speaker notes, which provide additional context.
 
 The following branches are used in the presenation
